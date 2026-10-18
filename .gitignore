@@ -1,0 +1,8 @@
+.venv/
+third_party/
+data/
+checkpoints/
+wandb/
+logs/
+__pycache__/
+*.pyc

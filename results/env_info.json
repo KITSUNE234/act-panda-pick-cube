@@ -1,0 +1,154 @@
+{
+  "env_name": "PandaPickCube",
+  "env_overrides": {
+    "impl": "jax"
+  },
+  "env_config": {
+    "action_repeat": 1,
+    "action_scale": 0.04,
+    "ctrl_dt": 0.02,
+    "episode_length": 150,
+    "impl": "jax",
+    "naccdmax": 49152,
+    "naconmax": 49152,
+    "njmax": 128,
+    "reward_config": {
+      "scales": {
+        "box_target": 8.0,
+        "gripper_box": 4.0,
+        "no_floor_collision": 0.25,
+        "robot_target_qpos": 0.3
+      }
+    },
+    "sim_dt": 0.005
+  },
+  "observation_size": 66,
+  "action_size": 8,
+  "ctrl_dt": 0.02,
+  "sim_dt": 0.005,
+  "obs_layout": {
+    "qpos": [
+      0,
+      16
+    ],
+    "qvel": [
+      16,
+      31
+    ],
+    "gripper_pos": [
+      31,
+      34
+    ],
+    "gripper_mat[3:]": [
+      34,
+      40
+    ],
+    "box_mat[3:]": [
+      40,
+      46
+    ],
+    "box_minus_gripper": [
+      46,
+      49
+    ],
+    "target_minus_box": [
+      49,
+      52
+    ],
+    "target_mat_minus_box_mat[:6]": [
+      52,
+      58
+    ],
+    "ctrl_minus_robot_qpos": [
+      58,
+      66
+    ]
+  },
+  "actuators": [
+    "actuator1",
+    "actuator2",
+    "actuator3",
+    "actuator4",
+    "actuator5",
+    "actuator6",
+    "actuator7",
+    "actuator8"
+  ],
+  "ctrl_range": [
+    [
+      -2.8973,
+      2.8973
+    ],
+    [
+      -1.7628,
+      1.7628
+    ],
+    [
+      -2.8973,
+      2.8973
+    ],
+    [
+      -3.0718,
+      -0.0698
+    ],
+    [
+      -2.8973,
+      2.8973
+    ],
+    [
+      -0.0175,
+      3.7525
+    ],
+    [
+      -2.8973,
+      2.8973
+    ],
+    [
+      0.0,
+      0.04
+    ]
+  ],
+  "success_dist_m": 0.05,
+  "replay_max_obs_diff": 0.0,
+  "note_reset_xpos_zero": "reset() skips mj_forward: xpos-derived obs fields are 0 at t=0",
+  "init_box_xy_range": [
+    [
+      0.5088419914245605,
+      -0.1967552751302719
+    ],
+    [
+      0.8970922827720642,
+      0.19849510490894318
+    ]
+  ],
+  "init_target_range": [
+    [
+      0.5001257061958313,
+      -0.18504004180431366,
+      0.23907199501991272
+    ],
+    [
+      0.8981660604476929,
+      0.1998678296804428,
+      0.42871716618537903
+    ]
+  ],
+  "batched_100x150_seconds": 6.786695241928101,
+  "torch_handoff_ok": true,
+  "versions": {
+    "python": "3.12.14",
+    "jax": "0.11.2",
+    "mujoco": "3.16.0",
+    "torch": "2.9.0+cu126",
+    "cuda_torch": "12.6",
+    "cudnn_torch": 91002,
+    "playground_commit": "d59156e099a8785dd58fbce2e25a6ee1f7b5800c"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER",
+    "jax_devices": [
+      "cuda:0"
+    ],
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35"
+  }
+}

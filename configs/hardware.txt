@@ -1,0 +1,6 @@
+NVIDIA GeForce RTX 4070 Ti SUPER, 580.178.04, 16376 MiB
+| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |
+Ubuntu 22.04.5 LTS
+6.8.0-138-generic
+Model name: AMD Ryzen 7 7800X3D 8-Core Processor
+RAM 30 GB
