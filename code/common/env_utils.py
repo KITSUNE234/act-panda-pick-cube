@@ -3,6 +3,7 @@ observation layout, and the success criterion used by teacher, dataset, and
 student evaluation alike."""
 
 import os
+import pathlib
 
 os.environ.setdefault("MUJOCO_GL", "egl")
 # Let JAX and PyTorch share the GPU instead of JAX grabbing 75% up front.
@@ -11,6 +12,7 @@ os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
 import jax
 import jax.numpy as jnp
 import numpy as np
+import yaml
 
 from mujoco_playground import registry
 
@@ -23,8 +25,11 @@ ENV_OVERRIDES = {"impl": "jax"}
 SUCCESS_DIST = 0.05
 
 
-def load_env():
-    return registry.load(ENV_NAME, config_overrides=ENV_OVERRIDES)
+def load_env(impl=None):
+    overrides = dict(ENV_OVERRIDES)
+    if impl is not None:
+        overrides["impl"] = impl
+    return registry.load(ENV_NAME, config_overrides=overrides)
 
 
 def obs_layout(env):
@@ -64,6 +69,18 @@ def box_target_dist(env, state):
 
 def is_success(final_dist):
     return final_dist < SUCCESS_DIST
+
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+
+def load_seeds():
+    return yaml.safe_load((ROOT / "configs" / "seeds.yaml").read_text())
+
+
+def eval_keys():
+    seeds = load_seeds()
+    return episode_keys(seeds["eval_base_seed"], seeds["n_eval"])
 
 
 def episode_keys(base_seed: int, n: int):

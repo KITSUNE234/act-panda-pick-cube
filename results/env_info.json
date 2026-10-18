@@ -133,7 +133,7 @@
       0.42871716618537903
     ]
   ],
-  "batched_100x150_seconds": 6.786695241928101,
+  "batched_100x150_seconds": 6.523872375488281,
   "torch_handoff_ok": true,
   "versions": {
     "python": "3.12.14",

@@ -1,0 +1,18 @@
+{
+  "checkpoint": "checkpoints/upstream_eps0_seed0/checkpoints/000024576000",
+  "step": 24576000,
+  "eval_base_seed": 10000,
+  "success_dist_m": 0.05,
+  "n_episodes": 100,
+  "success_rate": 0.0,
+  "success_ci95": [
+    0.0,
+    0.03699480747600191
+  ],
+  "final_dist_mean": 0.36315712332725525,
+  "final_dist_median": 0.3675333261489868,
+  "reached_box_rate": 0.0,
+  "early_done_rate": 0.0,
+  "mean_return": 96.88500213623047,
+  "first_success_step_mean": NaN
+}

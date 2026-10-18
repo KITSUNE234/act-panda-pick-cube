@@ -1,0 +1,5 @@
+# All randomness in the pipeline derives from these seeds.
+teacher_train_seed: 0        # PPO teacher (s1_train_teacher.py --seed)
+collect_base_seed: 0         # demo reset keys = split(PRNGKey(0), n_collect)
+eval_base_seed: 10000        # held-out eval keys = split(PRNGKey(10000), n_eval)
+n_eval: 100                  # evaluation episodes per policy (>= 50 required)

@@ -1,0 +1,18 @@
+{
+  "checkpoint": "checkpoints/teacher_seed0/checkpoints/000024576000",
+  "step": 24576000,
+  "eval_base_seed": 10000,
+  "success_dist_m": 0.05,
+  "n_episodes": 100,
+  "success_rate": 0.98,
+  "success_ci95": [
+    0.9299868370580063,
+    0.9944981477650318
+  ],
+  "final_dist_mean": 0.016238799318671227,
+  "final_dist_median": 0.006211170926690102,
+  "reached_box_rate": 0.9900000095367432,
+  "early_done_rate": 0.0,
+  "mean_return": 1446.6031494140625,
+  "first_success_step_mean": 36.265306122448976
+}

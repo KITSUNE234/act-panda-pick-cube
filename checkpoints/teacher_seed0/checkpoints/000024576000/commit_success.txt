@@ -1,0 +1,1 @@
+Checkpoint commit was successful to /home/bruce/Desktop/645HW2/csci645-imitation-learning/checkpoints/_exp_stdeps_seed0/checkpoints/000024576000

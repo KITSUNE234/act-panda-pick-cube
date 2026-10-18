@@ -5,6 +5,7 @@ description = "CSCI 645 HW2: imitation learning (ACT) on MuJoCo Playground Panda
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "playground[cuda]",
+  "brax",
   "torch==2.9.0",
   "mediapy",
   "matplotlib",
@@ -24,4 +25,7 @@ explicit = true
 [tool.uv.sources]
 # Pinned to the commit cloned into third_party/ (for learning/train_jax_ppo.py).
 playground = { git = "https://github.com/google-deepmind/mujoco_playground", rev = "d59156e099a8785dd58fbce2e25a6ee1f7b5800c" }
+# PyPI brax 0.14.2 still calls jax.device_put_replicated (removed in JAX 0.10);
+# main has the fix but is unreleased.
+brax = { git = "https://github.com/google/brax", rev = "6d039374b34a266107bd1e952180eea33ac4eab8" }
 torch = { index = "pytorch-cu126" }
