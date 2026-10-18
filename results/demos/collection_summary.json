@@ -1,0 +1,27 @@
+{
+  "teacher_checkpoint": "checkpoints/teacher_seed0/checkpoints/000024576000",
+  "collect_base_seed": 0,
+  "n_collected": 200,
+  "teacher_success_rate": 0.985,
+  "teacher_success_ci95": [
+    0.9568335194437211,
+    0.9948858548155076
+  ],
+  "filtering": "kept the first 100 successful episodes in seed-index order",
+  "n_kept": 100,
+  "last_kept_collect_index": 102,
+  "episode_length_steps": 150,
+  "obs_dim": 66,
+  "action_dim": 8,
+  "kept_first_success_step_mean": 39.01,
+  "kept_first_success_step_std": 13.040318247650246,
+  "kept_final_dist_mean": 0.00856996700167656,
+  "alignment_max_action_diff": 0.0,
+  "alignment_replay_max_obs_diff": 0.0,
+  "datasets": {
+    "baseline_100": 100,
+    "subset_50": 50,
+    "subset_25": 25
+  },
+  "sha256_baseline_obs_actions": "8c5835219288008e3c52ee4d61a7d4f4aa745559764a92e0bb4404df3ab23709"
+}

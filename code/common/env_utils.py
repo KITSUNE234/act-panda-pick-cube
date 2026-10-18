@@ -8,6 +8,12 @@ import pathlib
 os.environ.setdefault("MUJOCO_GL", "egl")
 # Let JAX and PyTorch share the GPU instead of JAX grabbing 75% up front.
 os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
+# MJX contact solving uses GPU scatter-adds whose summation order is otherwise
+# nondeterministic; the resulting 1e-6 differences grow chaotically through
+# contacts (closed-loop reruns diverged by ~10 in obs). With this flag, batched
+# rollouts are bitwise reproducible (a batch of 1 still compiles differently).
+if "xla_gpu_deterministic_ops" not in os.environ.get("XLA_FLAGS", ""):
+    os.environ["XLA_FLAGS"] = (os.environ.get("XLA_FLAGS", "") + " --xla_gpu_deterministic_ops=true").strip()
 
 import jax
 import jax.numpy as jnp

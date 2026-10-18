@@ -64,9 +64,35 @@ JAX and PyTorch share one venv and one GPU; `code/common/env_utils.py` sets
 | `upstream_eps0_seed0` (std_eps = 0) | 0% | [0.0, 3.7] |
 
 The seed-0 teacher solves episodes in 36 steps (0.72 s) on average. Its two failures are a
-near-miss on a far target (7.7 cm, threshold 5 cm) and a box in the far corner that it
+near-miss on a far target (5.9 cm, threshold 5 cm) and a box in the far corner that it
 never lifts. Success per checkpoint is in `results/teacher/eval_by_checkpoint.csv`
 (0% up to 11.5M steps, then 25%, 94%, … 98%).
+
+## 2. Demonstrations
+
+```bash
+.venv/bin/python code/s2_collect_demos.py   # ~40 s
+```
+
+- Teacher: `checkpoints/teacher_seed0/checkpoints/000024576000`, deterministic.
+- Collection reset keys: `split(PRNGKey(0), 200)`, which are disjoint from the eval keys (asserted).
+- **Teacher success on the 200 collection seeds: 197/200 = 98.5%** (95% CI [95.7, 99.5]).
+- **Filtering:** the baseline dataset is the first 100 successful episodes in seed-index
+  order (collection indices 0–102, skipping 3 failures). Failures are kept in
+  `data/demos_raw.npz` for analysis only.
+- Every episode is the full 150 steps (no early termination). The teacher typically reaches
+  the target by step 39 ± 13 and then holds the box there, which matters because success is
+  judged at the final step.
+- Stored per step: obs (66), executed action (8, teacher output in (−1, 1), never clipped),
+  reward, done, qpos/qvel (t = 0..150), box/gripper position, and box–target distance. Stored
+  per episode: target position, success, final distance, first-success step, reset key, and
+  collection index.
+- Alignment checks, both exact (0.0): re-querying the teacher on each stored obs reproduces
+  the stored action, and open-loop replay of the stored actions reproduces the stored obs.
+- Ablation subsets (`configs/datasets.yaml`): `subset_50` and `subset_25` are nested prefixes
+  of `np.random.default_rng(0).permutation(100)`; `baseline_100` is all of them.
+- `data/demos_baseline.npz` (6 MB) is committed. Collection is bitwise reproducible: the
+  sha256 of (obs, actions) is recorded in `results/demos/collection_summary.json`.
 
 ## Environment facts (from `results/env_info.json`)
 
@@ -105,5 +131,13 @@ never lifts. Success per checkpoint is in `results/teacher/eval_by_checkpoint.cs
 - Upstream `reset()` does not call `mj_forward`, so at t = 0 `xpos`/`site_xpos` and the
   observation fields derived from them are all zero; they are correct from step 1 on.
   We keep this unchanged because the PPO teacher is trained on the same observations.
-- Simulation is bitwise deterministic on our GPU: replaying the same actions from the
-  same reset key reproduces the trajectory exactly (max |Δobs| = 0 after 200 steps).
+- **GPU determinism:** by default MJX rollouts on the GPU are not reproducible. Scatter-add
+  summation order varies, and the resulting ~1e-6 differences grow chaotically through
+  contacts, so closed-loop reruns of the teacher diverged by up to ~10 in obs.
+  `env_utils.py` therefore sets `XLA_FLAGS=--xla_gpu_deterministic_ops=true`. With it,
+  batched rollouts are bitwise identical across runs and across batch sizes (100 vs 200);
+  a batch of 1 still compiles differently. All evaluation and collection numbers use this
+  flag. PPO training ran before the flag was added, so retraining yields a slightly
+  different teacher; the exact teacher checkpoint is committed instead.
+- GPU float32 matmuls (TF32) are batch-shape dependent at the ~1e-3 level, so policy
+  re-queries in checks use the same batch shape as the original rollout.

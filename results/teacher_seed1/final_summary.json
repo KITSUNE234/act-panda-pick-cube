@@ -9,10 +9,10 @@
     0.9455124752390653,
     0.9982326134344526
   ],
-  "final_dist_mean": 0.014910541474819183,
-  "final_dist_median": 0.005910712294280529,
+  "final_dist_mean": 0.014908390119671822,
+  "final_dist_median": 0.005895684473216534,
   "reached_box_rate": 0.9900000095367432,
   "early_done_rate": 0.0,
-  "mean_return": 1442.7794189453125,
-  "first_success_step_mean": 36.43434343434343
+  "mean_return": 1443.1131591796875,
+  "first_success_step_mean": 36.44444444444444
 }
