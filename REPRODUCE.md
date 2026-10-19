@@ -276,6 +276,88 @@ Observations:
   failure category, `act_baseline_100_seed0_failure_<category>_epXXX.mp4`. The teacher's videos
   on the same seeds are `teacher_{success,failure}_ep*.mp4`.
 
+## 6. Data ablation (Option A: dataset quantity)
+
+```bash
+bash code/s6_run_ablation.sh   # 8 new training runs (~14 min each), evaluation, summary
+```
+
+**What varies.**
+- *Independent variable:* the number of demonstrations, N = 25, 50 or 100.
+- *Nested datasets:* `subset_25` ⊂ `subset_50` ⊂ `baseline_100`, all prefixes of one fixed
+  permutation of the baseline (`configs/datasets.yaml`). Every condition therefore uses the
+  same teacher, the same filtering, and identical trajectories.
+- *Training seeds:* each N is trained with seeds 0, 1 and 2.
+
+**What stays fixed.**
+- Everything else in Section 4: architecture, normalization (statistics fit on each run's own
+  training set), optimizer, and the **same 30,000 gradient steps**.
+- A fixed number of steps means the smaller datasets get more passes over the data: 2048, 1024
+  and 512 epochs for N = 25, 50 and 100.
+- Evaluation is identical: the same 100 held-out seeds, temporal ensembling, and no checkpoint
+  selection.
+
+Outputs:
+- `results/ablation/ablation_table.{md,csv}`, `ablation_runs.csv` and `ablation_stats.json`;
+- the figure `results/ablation/ablation.png`;
+- per-run evaluations under `results/eval/`;
+- videos for training seed 0 of each N in `videos/act_<dataset>_seed0_*.mp4`.
+
+| Condition | Number of demonstrations | Teacher success rate | Student success rate (mean ± std over 3 training seeds) | Per seed | Pooled [95% CI] | Evaluation episodes |
+|---|---:|---:|---:|---:|---:|---:|
+| Baseline | 100 | 98% [93.0, 99.4] | 82.3% ± 2.3 | 81% / 81% / 85% | 82.3% [77.6, 86.2] | 100 per seed (300 total) |
+| Ablation (subset_50) | 50 | 98% [93.0, 99.4] | 56.0% ± 7.2 | 64% / 50% / 54% | 56.0% [50.3, 61.5] | 100 per seed (300 total) |
+| Ablation (subset_25) | 25 | 98% [93.0, 99.4] | 16.7% ± 1.5 | 17% / 15% / 18% | 16.7% [12.9, 21.3] | 100 per seed (300 total) |
+
+The teacher success rate is the same in every row because all datasets come from the same
+teacher. It succeeded on 197 of 200 collection episodes (98.5%), and only successes were kept.
+
+Findings:
+
+- **More demonstrations help a lot, and the effect is far larger than training-seed noise.**
+  - Success rises from 17% to 56% to 82% as N goes from 25 to 50 to 100.
+  - Pooled pairwise Fisher exact tests, 300 episodes per condition: 25 vs 50, p ≈ 4e-24;
+    50 vs 100, p ≈ 3e-12.
+  - The std across training seeds is only 1.5–7 points.
+  - The curve has not saturated at N = 100 (82% vs. the teacher's 98%), so more data would
+    likely help further.
+- **The models memorize equally well but generalize very differently.**
+  - From the reset keys of their own training episodes, all students succeed 96–97% of the time
+    regardless of N.
+  - Lower N gives a *lower* final train L1 (0.018 / 0.023 / 0.031 for N = 25 / 50 / 100)
+    but a *higher* L1 on the 97 unseen teacher demonstrations (0.152 / 0.112 / 0.080).
+  - So the gap is entirely in generalizing to new initial conditions: 25 demonstrations cover
+    the 5-D space of box position and target position too sparsely.
+- **The type of failure changes with N.** Failures are pooled over the 3 seeds:
+  - N = 25: 131 of 250 failures are *no grasp*. The arm does not even reach an unseen box
+    position correctly.
+  - N = 50: grasping mostly works (31 no-grasp failures), and *near misses* (box carried to
+    within 5–10 cm of the target) become the largest category, 65 of 132.
+  - N = 100: the remaining 53 failures are spread over near miss (20), no grasp (12), dropped
+    (10) and wrong place (10).
+
+  More data first fixes reaching and grasping, then placement precision.
+- **Overfitting with more epochs.** For N = 25 and 50, held-out L1 reaches its minimum around
+  5–10k steps and then rises slightly (by about 0.005). For N = 100 it stays flat. Early
+  stopping would therefore help small datasets a little, but the effect is far too small to
+  explain the success gap.
+- The 50 validation seeds used during training rank the conditions identically:
+  - 16 / 14 / 18% for N = 25;
+  - 42 / 36 / 44% for N = 50;
+  - 72 / 72 / 56% for N = 100.
+
+  These are lower than on the 100 evaluation seeds, which reflects sampling noise between two
+  random seed sets.
+
+Limitations:
+
+- Only one draw of the nested subsets was used, so the variance from *which* demonstrations are
+  selected is not measured. Only training-seed variance is.
+- Hyperparameters were set once, for N = 100, and not re-tuned per N.
+- Holding the gradient steps fixed confounds dataset size with the number of epochs. The
+  held-out L1 curves suggest this matters little.
+- All conclusions are for one deterministic PPO teacher and one task.
+
 ## Environment facts (from `results/env_info.json`)
 
 - Observation: 66-D flat vector — qpos(16: 9 robot + 7 box freejoint), qvel(15),

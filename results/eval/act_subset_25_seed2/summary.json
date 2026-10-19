@@ -1,0 +1,33 @@
+{
+  "name": "act_subset_25_seed2",
+  "policy": "act",
+  "checkpoint": "checkpoints/act_subset_25_seed2/policy.pt",
+  "dataset": "subset_25",
+  "n_demos": 25,
+  "train_seed": 2,
+  "mode": "ensemble",
+  "ensemble_m": 0.01,
+  "query_every": 1,
+  "eval_base_seed": 10000,
+  "n_episodes": 100,
+  "success_rate": 0.18,
+  "success_ci95": [
+    0.11700131654251038,
+    0.26667536024213084
+  ],
+  "final_dist_mean": 0.23269477486610413,
+  "final_dist_median": 0.2669406533241272,
+  "reached_box_rate": 0.36000001430511475,
+  "early_done_rate": 0.01,
+  "mean_return": 605.8460693359375,
+  "first_success_step_mean": 38.5,
+  "categories": {
+    "success": 18,
+    "no_grasp": 47,
+    "grasp_no_lift": 1,
+    "dropped": 8,
+    "near_miss": 16,
+    "wrong_place": 9,
+    "out_of_bounds": 1
+  }
+}

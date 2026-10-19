@@ -1,0 +1,109 @@
+{
+  "dataset": "subset_25",
+  "episodes": null,
+  "seed": 1,
+  "out": null,
+  "steps": 30000,
+  "batch": 256,
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "kl_weight": 10.0,
+  "chunk": 20,
+  "hidden": 256,
+  "layers": 4,
+  "latent": 32,
+  "dropout": 0.1,
+  "std_floor": 0.01,
+  "ensemble_m": 0.01,
+  "log_every": 100,
+  "val_every": 1000,
+  "rollout_every": 5000,
+  "wandb": "online",
+  "wandb_project": "csci645-hw2-act",
+  "run_name": "act_subset_25_seed1",
+  "n_train_episodes": 25,
+  "n_train_samples": 3750,
+  "n_val_episodes": 97,
+  "n_params": 10611528,
+  "model": {
+    "obs_dim": 66,
+    "action_dim": 8,
+    "chunk": 20,
+    "hidden": 256,
+    "heads": 8,
+    "ff": 1024,
+    "enc_layers": 4,
+    "dec_layers": 4,
+    "cvae_layers": 4,
+    "latent": 32,
+    "dropout": 0.1,
+    "obs_groups": [
+      [
+        0,
+        16
+      ],
+      [
+        16,
+        31
+      ],
+      [
+        31,
+        34
+      ],
+      [
+        34,
+        40
+      ],
+      [
+        40,
+        46
+      ],
+      [
+        46,
+        49
+      ],
+      [
+        49,
+        52
+      ],
+      [
+        52,
+        58
+      ],
+      [
+        58,
+        66
+      ]
+    ]
+  },
+  "train_episode_collect_index": [
+    6,
+    9,
+    10,
+    11,
+    12,
+    14,
+    17,
+    20,
+    21,
+    23,
+    24,
+    29,
+    38,
+    39,
+    53,
+    55,
+    75,
+    78,
+    84,
+    85,
+    86,
+    93,
+    96,
+    97,
+    100
+  ],
+  "torch": "2.9.0+cu126",
+  "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER",
+  "wandb_url": "https://forge.coreweave.com/wandb/guangmingzui2de-university-of-southern-california/csci645-hw2-act/runs/3m1y4o0y"
+}

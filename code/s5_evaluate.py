@@ -103,6 +103,7 @@ def main():
     p.add_argument("--query_every", type=int, default=None, help="open_loop: default = chunk length")
     p.add_argument("--n_videos", type=int, default=2,
                    help="success videos; plus one per failure category (teacher videos come from s1)")
+    p.add_argument("--no_videos", action="store_true")
     args = p.parse_args()
 
     setup_torch()
@@ -131,7 +132,7 @@ def main():
         (res_dir / "summary.json").write_text(json.dumps(summary, indent=2))
         np.savez_compressed(ROOT / "data" / "eval_rollouts" / f"{name}.npz",
                             **{k: out[k] for k in SAVE_KEYS})
-        if spec != "teacher":
+        if spec != "teacher" and not args.no_videos:
             write_videos(env, out, table, name, args.n_videos)
         lo, hi = summary["success_ci95"]
         print(f"{name}: success {summary['success_rate']:.0%} [{lo:.1%}, {hi:.1%}]  "
