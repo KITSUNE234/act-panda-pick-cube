@@ -227,6 +227,55 @@ Monitoring during training, never used to select a model:
 - Reloading `policy.pt` and re-running the 50 validation seeds reproduces the 72% logged during
   training.
 
+## 5. Evaluation
+
+```bash
+.venv/bin/python code/s5_evaluate.py --policies teacher act_baseline_100_seed0   # ~30 s
+.venv/bin/python code/s5_plot_eval.py                                            # results/eval/baseline_vs_teacher.png
+```
+
+- Every policy is rolled out from the same 100 held-out reset keys, `split(PRNGKey(10000), 100)`.
+  These are disjoint from the demonstration and validation keys. No training trajectory is
+  replayed.
+- The student runs with z = 0 and temporal ensembling (m = 0.01). The teacher runs
+  deterministically.
+- Success means the box centre is within 5 cm of the target at step 150. CIs are Wilson 95%.
+- Outputs:
+  - per-episode results in `results/eval/<name>/episodes.csv`;
+  - summaries in `results/eval/<name>/summary.json` and `results/eval/summary.csv`;
+  - full rollouts in `data/eval_rollouts/<name>.npz` (regenerable, not committed).
+- Evaluation is deterministic: re-running it gives identical results.
+
+| Condition | Number of demonstrations | Teacher success rate | Student success rate | Evaluation episodes |
+|---|---:|---:|---:|---:|
+| Baseline (ACT, seed 0) | 100 | 98% [93.0, 99.4] | **81%** [72.2, 87.5] | 100 |
+
+Failures are categorized automatically by `code/common/analysis.py`. Grasp means the gripper
+comes within 2 cm of the box centre; lift means the box centre rises above 4.5 cm.
+
+| Category | Teacher | Student |
+|---|---:|---:|
+| no grasp | 1 | 5 |
+| grasp, no lift | 0 | 1 |
+| dropped (lifted, back on the table at the end) | 0 | 4 |
+| near miss (holding, 5–10 cm from the target) | 1 | 5 |
+| wrong place (holding, ≥ 10 cm from the target) | 0 | 4 |
+
+Observations:
+
+- The comparison is paired: on 81 seeds both policies succeed, on 17 only the teacher
+  succeeds, and on 2 both fail. The student never succeeds where the teacher fails.
+- When the student succeeds it is as fast as the teacher (first success at step 36.6 vs. 36.3),
+  and its actions are slightly smoother than the teacher's (mean |Δa| per step 0.023 vs. 0.027),
+  as expected from temporal ensembling.
+- The student's failures are spread across all stages of the task, not concentrated in one.
+  They cluster at **initial box positions close to the robot** (x < 0.6 m, mostly |y| > 0.05):
+  success by initial box x is 59% (0.5–0.6 m), 88% (0.6–0.7), 97% (0.7–0.8) and 78% (0.8–0.9).
+  The teacher's hard cases (Section 3) are instead at the far corners. Phase 7 analyses this.
+- Videos are in `videos/`: `act_baseline_100_seed0_success_ep{000,002}.mp4` and one video per
+  failure category, `act_baseline_100_seed0_failure_<category>_epXXX.mp4`. The teacher's videos
+  on the same seeds are `teacher_{success,failure}_ep*.mp4`.
+
 ## Environment facts (from `results/env_info.json`)
 
 - Observation: 66-D flat vector — qpos(16: 9 robot + 7 box freejoint), qvel(15),

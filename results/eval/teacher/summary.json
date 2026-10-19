@@ -1,0 +1,27 @@
+{
+  "name": "teacher",
+  "policy": "teacher",
+  "checkpoint": "checkpoints/teacher_seed0/checkpoints/000024576000",
+  "eval_base_seed": 10000,
+  "n_episodes": 100,
+  "success_rate": 0.98,
+  "success_ci95": [
+    0.9299868370580063,
+    0.9944981477650318
+  ],
+  "final_dist_mean": 0.016037702560424805,
+  "final_dist_median": 0.006287273485213518,
+  "reached_box_rate": 0.9900000095367432,
+  "early_done_rate": 0.0,
+  "mean_return": 1448.16259765625,
+  "first_success_step_mean": 36.285714285714285,
+  "categories": {
+    "success": 98,
+    "no_grasp": 1,
+    "grasp_no_lift": 0,
+    "dropped": 0,
+    "near_miss": 1,
+    "wrong_place": 0,
+    "out_of_bounds": 0
+  }
+}

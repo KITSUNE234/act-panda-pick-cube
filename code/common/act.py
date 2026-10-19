@@ -15,11 +15,24 @@ are as in the reference.
 """
 
 import dataclasses
+import os
+
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+def setup_torch():
+    """Numerics shared by training and evaluation. TF32 matmuls are ~20% faster;
+    callers run the model under sdpa_kernel(SDPBackend.MATH), the deterministic
+    attention kernel (the default memory-efficient kernel is not, and is also
+    slower at this sequence length)."""
+    torch.use_deterministic_algorithms(True, warn_only=True)
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
 
 
 @dataclasses.dataclass

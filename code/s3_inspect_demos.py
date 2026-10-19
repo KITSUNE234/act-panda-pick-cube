@@ -20,6 +20,7 @@ import json
 from common import plot_style
 from common import env_utils as eu
 from common import rollout as ro
+from common.analysis import phase_steps
 from common.demos import dataset_indices, load_demos
 
 import matplotlib.pyplot as plt
@@ -30,18 +31,10 @@ import pandas as pd
 ROOT = eu.ROOT
 RES = ROOT / "results" / "demos"
 VID = ROOT / "videos"
-LIFT_Z = 0.045      # box counts as lifted once its centre is 1.5 cm above the rest height
-GRASP_DIST = 0.02   # gripper site within 2 cm of the box centre
 FRAME_STEPS = [0, 12, 24, 36, 60, 149]
 STRIP_EPISODES = [0, 1, 2, 3]
 GRID_EPISODES = [0, 1, 2, 3]
 ACTION_NAMES = [f"joint {i + 1}" for i in range(7)] + ["gripper"]
-
-
-def first_true(mask):
-    """Index of the first True along the last axis, or -1."""
-    idx = np.argmax(mask, axis=-1)
-    return np.where(mask.any(axis=-1), idx, -1)
 
 
 def reconstruct_ctrl(env, actions):
@@ -58,11 +51,9 @@ def reconstruct_ctrl(env, actions):
 
 def episode_table(d, env):
     """Per-episode diagnostics. Index 0 of the [T+1] arrays is the reset state."""
-    box, grip = d["box_pos"][:, 1:], d["gripper_pos"][:, 1:]
     adr = env._obj_qposadr
     box0 = d["qpos"][:, 0, adr:adr + 3]
-    grasp = first_true(np.linalg.norm(box - grip, axis=-1) < GRASP_DIST) + 1
-    lift = first_true(box[..., 2] > LIFT_Z) + 1
+    grasp, lift = phase_steps(d)
     path = np.linalg.norm(np.diff(d["box_pos"][:, 1:], axis=1), axis=-1).sum(1)
     straight = np.linalg.norm(d["target_pos"] - box0, axis=-1)
     fss = d["first_success_step"]

@@ -23,14 +23,11 @@ Writes checkpoints/act_<dataset>_seed<seed>/{policy.pt, progress.csv, train_conf
 import argparse
 import dataclasses
 import json
-import os
 import time
-
-os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 
 from common import env_utils as eu
 from common import rollout as ro
-from common.act import ACT, ACTConfig, ChunkExecutor, Normalizer, act_loss, save_policy
+from common.act import ACT, ACTConfig, ChunkExecutor, Normalizer, act_loss, save_policy, setup_torch
 from common.demos import load_demos
 
 import jax
@@ -126,12 +123,7 @@ def main():
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
-    torch.use_deterministic_algorithms(True, warn_only=True)
-    # TF32 matmuls are ~20% faster. main() runs under the "math" attention kernel,
-    # which is deterministic (the default memory-efficient kernel is not) and is
-    # also faster at this sequence length.
-    torch.backends.cuda.matmul.allow_tf32 = True
-    torch.backends.cudnn.allow_tf32 = True
+    setup_torch()
     device = "cuda"
 
     # Data.
