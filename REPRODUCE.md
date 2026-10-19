@@ -94,6 +94,55 @@ never lifts. Success per checkpoint is in `results/teacher/eval_by_checkpoint.cs
 - `data/demos_baseline.npz` (6 MB) is committed. Collection is bitwise reproducible: the
   sha256 of (obs, actions) is recorded in `results/demos/collection_summary.json`.
 
+## 3. Dataset inspection
+
+```bash
+.venv/bin/python code/s3_inspect_demos.py   # ~10 s
+```
+
+Outputs are in `results/demos/`: `dataset_stats.json`, `demo_episodes.csv`, `demo_frames.png`,
+`trajectories.png`, `init_coverage.png`, `timing.png`, and `actions.png`. Videos are in `videos/`:
+`expert_demo_ep000.mp4`, `expert_demos_grid.mp4`, and `expert_demo_slowest_ep088.mp4`.
+
+| | collected | baseline dataset |
+|---|---|---|
+| trajectories | 200 | 100 (subsets: 50, 25) |
+| length (steps) | 150 ± 0 | 150 ± 0 (15,000 transitions) |
+| success fraction | 0.985 | 1.00 (filtered) |
+| grasp / lift / first-success step | | 17.0 ± 5.5 / 22.2 ± 6.8 / 39.0 ± 13.0 |
+| final box–target distance | | 0.9 ± 0.9 cm (max 3.5 cm) |
+
+Episode length is fixed at 150 steps because the environment only terminates early on
+failure. The phase timings are therefore the meaningful measure of how long a demonstration
+takes. Grasp is the first step with the gripper within 2 cm of the box centre. Lift is the
+first step with the box centre above 4.5 cm.
+
+Observations, for the report discussion:
+
+- **Consistency.** Every demonstration follows the same strategy: reach down with the gripper
+  open, close it on the box at about step 17, lift about 5 steps later, then carry the
+  box to the target. No demonstration re-grasps or drops the box, and none leaves the 5 cm
+  success region once it has entered it. After success, the joint actions decay to about 0
+  (mean |a| is 0.06 after success versus 0.42 before) and the arm holds still.
+- **Coverage.** Box start positions and targets cover the whole randomization range
+  (x 0.50–0.89, y −0.19–0.20, target z 0.23–0.43). The 25- and 50-demo subsets cover the same
+  ranges. The three teacher failures are at the far corners (box x ≥ 0.85, |y| ≥ 0.15), and
+  filtering on success removes them, so the dataset is slightly thinner exactly where the task
+  is hardest.
+- **Time to success.** Time to success depends mostly on how far the box is from the robot:
+  the correlation between initial box x and first-success step is r = 0.73, compared with
+  0.40 for the initial box–target distance. All demonstrations slower than 65 steps start with
+  box x > 0.84.
+- **Errors and inefficiencies.**
+  - The carried box travels 1.18 ± 0.10 times the straight-line distance.
+  - During the reach (steps 0–30) the actions for joints 1, 3, 5 and 7 jitter from step to
+    step.
+  - The teacher stops correcting once the box is inside the success radius: 14 of 100
+    demonstrations end 2–3.5 cm from the target instead of near 0.
+  - The gripper target sits at its limit 99% of the time, so after the first few steps only
+    the sign of the gripper action matters. The teacher keeps outputting about −0.35, which
+    the clip turns into a no-op.
+
 ## Environment facts (from `results/env_info.json`)
 
 - Observation: 66-D flat vector — qpos(16: 9 robot + 7 box freejoint), qvel(15),
