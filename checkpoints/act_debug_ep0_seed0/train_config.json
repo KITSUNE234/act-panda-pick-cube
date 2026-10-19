@@ -1,0 +1,86 @@
+{
+  "dataset": "baseline_100",
+  "episodes": [
+    0
+  ],
+  "seed": 0,
+  "out": null,
+  "steps": 2000,
+  "batch": 256,
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "kl_weight": 10.0,
+  "chunk": 20,
+  "hidden": 256,
+  "layers": 4,
+  "latent": 32,
+  "dropout": 0.1,
+  "std_floor": 0.01,
+  "ensemble_m": 0.01,
+  "log_every": 100,
+  "val_every": 500,
+  "rollout_every": 1000,
+  "wandb": "disabled",
+  "wandb_project": "csci645-hw2-act",
+  "run_name": "act_debug_ep0_seed0",
+  "n_train_episodes": 1,
+  "n_train_samples": 150,
+  "n_val_episodes": 97,
+  "n_params": 10611528,
+  "model": {
+    "obs_dim": 66,
+    "action_dim": 8,
+    "chunk": 20,
+    "hidden": 256,
+    "heads": 8,
+    "ff": 1024,
+    "enc_layers": 4,
+    "dec_layers": 4,
+    "cvae_layers": 4,
+    "latent": 32,
+    "dropout": 0.1,
+    "obs_groups": [
+      [
+        0,
+        16
+      ],
+      [
+        16,
+        31
+      ],
+      [
+        31,
+        34
+      ],
+      [
+        34,
+        40
+      ],
+      [
+        40,
+        46
+      ],
+      [
+        46,
+        49
+      ],
+      [
+        49,
+        52
+      ],
+      [
+        52,
+        58
+      ],
+      [
+        58,
+        66
+      ]
+    ]
+  },
+  "train_episode_collect_index": [
+    0
+  ],
+  "torch": "2.9.0+cu126",
+  "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER"
+}

@@ -89,6 +89,11 @@ def eval_keys():
     return episode_keys(seeds["eval_base_seed"], seeds["n_eval"])
 
 
+def val_keys():
+    seeds = load_seeds()
+    return episode_keys(seeds["val_base_seed"], seeds["n_val"])
+
+
 def episode_keys(base_seed: int, n: int):
     """Deterministic per-episode reset keys; episode i always gets the same key."""
     return jax.random.split(jax.random.PRNGKey(base_seed), n)

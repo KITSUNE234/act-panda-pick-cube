@@ -143,6 +143,90 @@ Observations, for the report discussion:
     the sign of the gripper action matters. The teacher keeps outputting about −0.35, which
     the clip turns into a no-op.
 
+## 4. ACT student
+
+```bash
+.venv/bin/python code/s4_train_act.py --dataset baseline_100 --seed 0   # ~14 min
+.venv/bin/python code/s4_plot_training.py                               # results/act/training_baseline.png
+# sanity check: overfit a single demonstration (~1.5 min)
+.venv/bin/python code/s4_train_act.py --episodes 0 --steps 2000 --rollout_every 1000 --val_every 500 --wandb disabled
+```
+
+Each run writes `checkpoints/act_<dataset>_seed<seed>/`, which contains `policy.pt` (42 MB, not
+committed), `progress.csv` and `train_config.json`. Curves are also logged to Weights &
+Biases (project `csci645-hw2-act`; the run URL is in `train_config.json`). Everything needed for
+the report is also in the local CSV and figures.
+
+**Implementation.** `code/common/act.py` is our own PyTorch implementation of ACT (Zhao et
+al., *Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware*, RSS 2023;
+reference code at github.com/tonyzhaozh/act). It keeps the reference design:
+
+- a CVAE whose encoder reads [CLS, obs, a_t..a_{t+k−1}] and outputs the latent z;
+- a transformer encoder–decoder policy whose decoder has k learned query tokens;
+- the loss L1 + β·KL;
+- z = 0 at test time, with temporal ensembling.
+
+Changes for a state-only task:
+
+- There is no image backbone. The 66-D observation is split into its 9 semantic groups (qpos,
+  qvel, gripper pos, gripper rotation, box rotation, box−gripper, target−box, target rotation
+  difference, ctrl−qpos). Each group is linearly projected to its own token, so the encoder
+  attends over 10 tokens: [z, 9 observation tokens].
+- Positional embeddings are learned and added once at the input. The reference adds them
+  inside every attention layer.
+- The layers are the stock `torch.nn.Transformer{Encoder,Decoder}` layers (post-norm, ReLU),
+  and the model is smaller than the reference (see below).
+
+| | |
+|---|---|
+| Observation | 66-D state (layout under *Environment facts*), standardized with training-set mean/std; std floored at 0.01 (affects 8 dims: finger qpos, two box-quaternion components, ctrl−qpos of joints 5–7 and gripper) |
+| Action | 8-D delta joint/gripper targets in [−1, 1], standardized; predictions de-standardized and clipped to [−1, 1] |
+| Chunk length k | 20 steps (0.4 s) |
+| Architecture | hidden 256, 8 heads, FF 1024, dropout 0.1; 4 CVAE-encoder, 4 encoder, 4 decoder layers; latent 32; 10.6M parameters |
+| Objective | masked L1 on standardized actions + 10 · KL(q(z∣o, a) ‖ N(0, I)); chunks running past step 150 are zero-padded and masked out of the loss and the CVAE encoder |
+| Optimizer | AdamW, lr 1e-4 (constant), weight decay 1e-4, batch 256, no gradient clipping |
+| Duration | fixed 30,000 gradient steps (512 epochs of the 15,000 baseline samples); the final weights are used, with no checkpoint selection |
+| Sampling | (episode, t) pairs drawn uniformly with replacement |
+| Inference | query every step, z = 0, temporal ensembling with weights exp(−0.01·i) (i = 0 is the oldest prediction) |
+| Seed | `--seed 0` (initialization, batches, CVAE noise, dropout); seeds 1 and 2 are reserved for the ablation |
+
+Monitoring during training, never used to select a model:
+
+- Held-out L1: computed on the 97 successful collected episodes that are not in the baseline.
+- Closed-loop success on 50 validation seeds (`val_base_seed` in `configs/seeds.yaml`). These
+  seeds are disjoint from the collection and evaluation seeds, and this is asserted.
+- Closed-loop success from the reset keys of 50 training episodes.
+
+**Baseline run (`act_baseline_100_seed0`), figure `results/act/training_baseline.png`:**
+
+- Train L1 keeps falling (0.11 at 1k steps, 0.030 at 30k). Held-out L1 flattens at about 0.079
+  from roughly 8k steps on, so the model is fitting the 100 demonstrations more closely than it
+  generalizes.
+- KL collapses to about 1e-6, so the latent z carries essentially no information. This is
+  expected: the teacher is a deterministic policy, so the demonstrations contain no
+  multimodality for z to explain.
+- Closed-loop success at 5k / 10k / … / 30k steps is 64 / 56 / 60 / 62 / 74 / 72% on the
+  validation seeds and 84 / 88 / 94 / 94 / 94 / 94% from the training initial conditions.
+- Of the 14 validation failures of the final model:
+  - 8 are near-misses: the box is grasped, lifted and carried, but ends 5.1–9.2 cm from the
+    target.
+  - 2 never grasp the box.
+  - 4 grasp the box but lose it or carry it elsewhere.
+
+  Phase 5 runs the formal evaluation on the 100 held-out seeds.
+
+**Checks.**
+
+- *Overfitting one demonstration:* training on demonstration 0 only for 2,000 steps
+  (`checkpoints/act_debug_ep0_seed0`) reproduces it in closed loop from its own reset key
+  (success, final distance 0.3 cm) and gets 0% on the validation seeds, as expected.
+- *Reproducibility:* two identical 500-step runs give bitwise-identical losses and weights.
+  - Matmuls use TF32. Attention uses PyTorch's deterministic "math" kernel; the default
+    memory-efficient kernel is nondeterministic.
+  - The run also sets `torch.use_deterministic_algorithms` and `CUBLAS_WORKSPACE_CONFIG`.
+- Reloading `policy.pt` and re-running the 50 validation seeds reproduces the 72% logged during
+  training.
+
 ## Environment facts (from `results/env_info.json`)
 
 - Observation: 66-D flat vector — qpos(16: 9 robot + 7 box freejoint), qvel(15),
