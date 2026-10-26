@@ -1,5 +1,11 @@
 # CSCI 645 HW2: Imitation Learning on PandaPickCube
 
+<p align="center">
+  <img src="assets/act_student_rollouts.gif" width="600" alt="ACT student picking up the box from four held-out start positions">
+  <br>
+  <em>ACT student (100 demonstrations) on four held-out start positions; the red dot is the target.</em>
+</p>
+
 Yixin Liu. The write-up is `report.pdf`.
 
 - Environment: MuJoCo Playground `PandaPickCube`, state observations, `impl="jax"`.
