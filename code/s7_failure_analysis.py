@@ -14,7 +14,7 @@ Writes results/failure/
   covariate_shift.csv   distance of visited states to the nearest training state, per step
   coverage_vs_n.csv     the same distance summarized per run of the 25/50/100-demo ablation
   exec_modes.csv        success and smoothness for each chunk execution mode
-  summary.json          the numbers quoted in REPRODUCE.md
+  summary.json          the numbers quoted in the report
 
   python code/s7_failure_analysis.py
 """

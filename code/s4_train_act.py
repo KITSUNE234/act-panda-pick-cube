@@ -23,6 +23,7 @@ Writes checkpoints/act_<dataset>_seed<seed>/{policy.pt, progress.csv, train_conf
 import argparse
 import dataclasses
 import json
+import os
 import time
 
 from common import env_utils as eu
@@ -112,7 +113,8 @@ def main():
     p.add_argument("--log_every", type=int, default=100)
     p.add_argument("--val_every", type=int, default=1000)
     p.add_argument("--rollout_every", type=int, default=5000)
-    p.add_argument("--wandb", default="online", choices=["online", "offline", "disabled"])
+    p.add_argument("--wandb", default=os.environ.get("WANDB_MODE", "online"),
+                   choices=["online", "offline", "disabled"])
     p.add_argument("--wandb_project", default="csci645-hw2-act")
     args = p.parse_args()
 

@@ -43,7 +43,7 @@ def main():
     # sqrt(0.01) = 0.1. With the default 0.0, the box-height dim has std ~0.003
     # while the box rests on the table; once the policy starts lifting, that
     # input jumps to ~100 sigma, the value loss explodes (~1e14), and PPO
-    # collapses to 0% success (see REPRODUCE.md). 0.0 reproduces upstream.
+    # collapses to 0% success (see README.md and the report). 0.0 reproduces upstream.
     p.add_argument("--obs_std_eps", type=float, default=0.01,
                    help="brax normalize_observations_std_eps (upstream: 0.0)")
     p.add_argument("--ppo_override", default="{}",
