@@ -1,0 +1,33 @@
+{
+  "name": "act_baseline_100_seed1__ens_m0.1",
+  "policy": "act",
+  "checkpoint": "checkpoints/act_baseline_100_seed1/policy.pt",
+  "dataset": "baseline_100",
+  "n_demos": 100,
+  "train_seed": 1,
+  "mode": "ensemble",
+  "ensemble_m": 0.1,
+  "query_every": 1,
+  "eval_base_seed": 10000,
+  "n_episodes": 100,
+  "success_rate": 0.77,
+  "success_ci95": [
+    0.6784543514317231,
+    0.841568452531236
+  ],
+  "final_dist_mean": 0.07477951794862747,
+  "final_dist_median": 0.024703089147806168,
+  "reached_box_rate": 0.7900000214576721,
+  "early_done_rate": 0.0,
+  "mean_return": 1167.152587890625,
+  "first_success_step_mean": 38.33766233766234,
+  "categories": {
+    "success": 77,
+    "no_grasp": 4,
+    "grasp_no_lift": 0,
+    "dropped": 2,
+    "near_miss": 10,
+    "wrong_place": 7,
+    "out_of_bounds": 0
+  }
+}

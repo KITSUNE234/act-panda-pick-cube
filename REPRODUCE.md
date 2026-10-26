@@ -271,7 +271,7 @@ Observations:
 - The student's failures are spread across all stages of the task, not concentrated in one.
   They cluster at **initial box positions close to the robot** (x < 0.6 m, mostly |y| > 0.05):
   success by initial box x is 59% (0.5–0.6 m), 88% (0.6–0.7), 97% (0.7–0.8) and 78% (0.8–0.9).
-  The teacher's hard cases (Section 3) are instead at the far corners. Phase 7 analyses this.
+  The teacher's hard cases (Section 3) are instead at the far corners. Section 7 analyses this.
 - Videos are in `videos/`: `act_baseline_100_seed0_success_ep{000,002}.mp4` and one video per
   failure category, `act_baseline_100_seed0_failure_<category>_epXXX.mp4`. The teacher's videos
   on the same seeds are `teacher_{success,failure}_ep*.mp4`.
@@ -357,6 +357,181 @@ Limitations:
 - Holding the gradient steps fixed confounds dataset size with the number of epochs. The
   held-out L1 curves suggest this matters little.
 - All conclusions are for one deterministic PPO teacher and one task.
+
+## 7. Failure analysis
+
+```bash
+# Chunk-execution variants of the 3 baseline runs (~10 s each)
+for q in 20 10 5 1; do
+  .venv/bin/python code/s5_evaluate.py --no_videos --mode open_loop --query_every $q \
+      --policies act_baseline_100_seed{0,1,2}
+done
+for m in 0 0.1; do
+  .venv/bin/python code/s5_evaluate.py --no_videos --mode ensemble --ensemble_m $m \
+      --policies act_baseline_100_seed{0,1,2}
+done
+.venv/bin/python code/s7_failure_analysis.py   # teacher-takeover rollouts + metrics (~3 min)
+.venv/bin/python code/s7_plot_failure.py       # figures + side-by-side video
+```
+
+Outputs:
+- `results/failure/`:
+  - `summary.json`: every number quoted below;
+  - `episodes.csv`: per-episode diagnostics for the 3 baseline runs;
+  - `takeover.csv`, `covariate_shift.csv`, `coverage_vs_n.csv`, `exec_modes.csv`;
+  - figures `failure_modes.png` and `exec_modes.png`.
+- `videos/failure_tilt_student_vs_teacher_ep007.mp4`: student (left) and teacher (right) on the
+  same held-out seed.
+
+The analysis pools the 3 baseline runs (N = 100, seeds 0–2): 300 episodes, 53 failures.
+
+### Tools
+
+**Teacher takeover.** On the same 100 held-out seeds, the student acts for steps t < s and the
+teacher for t ≥ s.
+- Batched rollouts are bitwise deterministic, so the first s steps are exactly the student's
+  evaluation episode (the script asserts this at s = 150).
+- s = 0 is the teacher alone; s = 150 is the student alone.
+- If the teacher succeeds after taking over from a failing student, then the student reached a
+  state the expert can still solve, and the error happened after s.
+
+This is the DAgger question asked offline: would expert labels on the student's own states have
+been useful?
+
+**Distance to the training data.** For every visited state we compute the distance to the
+nearest state in the run's training demonstrations.
+- Distance is measured in the policy's normalized input space (RMS z-score per dimension).
+- A state counts as *off-distribution* above 1.29, the 99th percentile of the teacher's own
+  states on the same seeds.
+
+**Box tilt.** The angle between the box's z-axis and vertical, computed from the box
+quaternion in qpos.
+
+### Failure mode 1: the box tilts in the gripper during the lift, and the student cannot recover
+
+This is the dominant failure mode, and it explains the near-robot cluster from Section 5.
+"Grasp-phase failures" are no grasp, grasp without lift, dropped and wrong place: 33 of 53.
+
+- **Where.** Initial box positions with x < 0.6 m are 27% of episodes but 47% of failures.
+  - Student success there is 69%, against 87% elsewhere.
+  - The teacher succeeds on 96% of the same near-robot seeds.
+- **When.** Near the robot the box is grasped at step ~11 and lifted at step ~16, with the arm
+  folded back. The box tilts in the fingers for the teacher too: up to ~10° at step 16
+  (`failure_modes.png`, left).
+  - The teacher straightens it within a few steps.
+  - In the near-robot grasp-phase failures the tilt keeps growing: median ~65° by step 19, and
+    the box often ends on its side (90°).
+  - 58% of all student failures exceed 30° of tilt at some point, against 3% of successes.
+  - Median maximum tilt: 36° in failures, 15° in successes, and 23° for the teacher on the
+    failure seeds.
+- **Off-distribution.** 79% of failures leave the training distribution, against 32% of
+  successes, at a median of **step 14**, i.e., during the grasp.
+  - After that, the median failure is up to ~20× farther from the nearest demonstration state
+    than the teacher on the same seeds (middle panel).
+  - The teacher never tilts the box badly, so the demonstrations contain no states with a
+    strongly tilted box, and no recovery behaviour.
+- **Not explained by unusual initial conditions.** At step 0, failures are only slightly
+  farther from the training initial states than successes (0.147 vs. 0.129; Mann-Whitney
+  p = 0.009). Both are far below the threshold. Failures begin as in-distribution states and
+  are driven out of distribution by the student's own actions: a small grasp error becomes a
+  large tilt within a few steps. This is the compounding-error / covariate-shift mechanism of
+  behaviour cloning.
+- **The error happens within a few steps of the grasp** (right panel). For grasp-phase failures,
+  the teacher's success after taking over at step s is:
+
+  | Takeover step s | Grasp-phase failures rescued (of 33) |
+  |---|---:|
+  | 0 | 29 |
+  | 10 | 27 |
+  | 15 | 11 |
+  | 20 | 6 |
+  | 30 | 1 |
+  | 50 | 0 |
+
+  Takeover at step 10 rescues as many as the teacher alone: the reach is fine. Between steps 10
+  and 20, the states become unrecoverable even for the expert. A dropped or flipped box cannot
+  be re-grasped by a teacher that never learned to re-grasp, either.
+- **Gripper behaviour.** No-grasp failures re-close the gripper 2–3 times (2.7 open/close
+  changes per episode, against 1.0 for the teacher). The student "tries again", but no
+  demonstration shows a successful re-grasp to imitate. Some no-grasp failures are at the far
+  corners (x ≈ 0.88–0.9), which are hard for the teacher too: it fails on 3 of the 12 no-grasp
+  seeds.
+
+### Failure mode 2: near misses, where the student stops 5–10 cm short
+
+This mode is different in kind: 20 of 53 failures, mostly far from the robot (15 of 20).
+
+- The student carries the box close to the target and then **stops**. Medians over the last
+  50 steps:
+  - the box moves 1.5 mm/s and its distance to the target changes by 0.1 mm;
+  - the arm action magnitude is 0.0047, the same as when *holding* after a success (0.0040).
+  - The final distance is 5.7 cm (median), so the student behaves as if the task were done.
+- These states remain recoverable: the teacher taking over at step 100 still succeeds in
+  **15 of 20** near misses (17 of 20 at step 30).
+- **Why the student stops.** About 75% of each demonstration is "hold the box at the target",
+  where the teacher outputs near-zero actions. Section 3 found that the teacher stops correcting
+  once inside ~5 cm, and 14 demos end 2–3.5 cm from the target. With L1 regression, the student
+  learns "box in the air near the target → stop", but its notion of "near" is a few cm too
+  coarse. Nothing in the data shows a correction made from 6 cm away.
+- This is the case where DAgger-style data would help directly: the teacher, queried on these
+  student states, returns corrective actions.
+
+### Chunk execution: temporal ensembling vs. open-loop chunks
+
+All variants use the same 3 baseline models, evaluated on 3 × 100 episodes. The p-values are
+Fisher exact tests against the default.
+
+| Execution | Success [95% CI] | p | Mean \|Δa\| (arm) | Gripper flips / episode |
+|---|---:|---:|---:|---:|
+| Ensemble, m = 0.01 (default) | 82.3% [77.6, 86.2] | — | 0.024 | 1.1 |
+| Ensemble, m = 0 (uniform) | 81.3% [76.5, 85.3] | 0.83 | 0.024 | 1.1 |
+| Ensemble, m = 0.1 | 79.0% [74.0, 83.2] | 0.35 | 0.024 | 1.1 |
+| Open loop, re-plan every step | 79.3% [74.4, 83.5] | 0.41 | 0.027 | 1.5 |
+| Open loop, re-plan every 5 | 78.0% [73.0, 82.3] | 0.22 | 0.034 | 2.8 |
+| Open loop, re-plan every 10 | 78.7% [73.7, 82.9] | 0.30 | 0.032 | 2.5 |
+| Open loop, full chunk (20) | **72.0%** [66.7, 76.8] | **0.003** | 0.030 | 2.0 |
+
+The teacher's mean |Δa| is 0.028.
+
+- **Executing whole 20-step chunks open loop is clearly worse** (−10 points). A chunk lasts
+  0.4 s, longer than the ~5-step window in which a tilting box must be corrected (failure
+  mode 1). Dropped boxes increase from 10 to 20, and near misses from 20 to 34.
+- Re-planning more often recovers most of the loss. **Temporal ensembling is best and the
+  smoothest:** lower action change than the teacher itself, and no gripper chatter.
+- Open-loop execution switches abruptly between chunks. This shows up as larger action changes
+  and repeated gripper open/close commands at chunk boundaries (2–2.8 per episode against 1.1).
+- The ensemble weight m barely matters (79–82%, not significant).
+- Single-step re-planning without ensembling is within noise of the default (79.3% vs. 82.3%,
+  p = 0.41). So, for this deterministic teacher, the main benefit is closed-loop reactivity, and
+  ensembling adds smoothness.
+
+### Coverage and dataset size (link to Section 6)
+
+`coverage_vs_n.csv` reports medians over episodes, averaged over the 3 seeds:
+
+| N | Teacher's states on held-out seeds → nearest demo state (step 0 / steps 60–150) | Student episodes that go off-distribution | Student success |
+|---:|---:|---:|---:|
+| 25 | 0.20 / 0.32 | 69% | 17% |
+| 50 | 0.16 / 0.22 | 48% | 56% |
+| 100 | 0.13 / 0.19 | 40% | 82% |
+
+- Fewer demonstrations means even the expert's own trajectories on new seeds are farther from
+  the training data.
+- With fewer demonstrations, students leave the training distribution more often. This is the
+  same mechanism as above, triggered earlier: at N = 25 mostly before the grasp (no-grasp
+  failures, Section 6).
+
+### Limitations
+
+- Tilt and distance metrics are correlational. The teacher takeover is the only intervention,
+  and it uses the teacher's competence as a proxy for "recoverable state".
+- The teacher was never trained on tilted-box states either, so "unrecoverable" means
+  unrecoverable for *this* expert.
+- The off-distribution threshold (teacher 99th percentile) is a heuristic. Distances in
+  normalized space are dominated by low-variance dimensions such as the box orientation.
+- We did not run DAgger itself. The takeover results suggest it would help near misses most
+  and grasp-phase failures only if the expert labels arrived within the first ~5 steps of the
+  grasp.
 
 ## Environment facts (from `results/env_info.json`)
 

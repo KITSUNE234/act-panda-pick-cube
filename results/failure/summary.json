@@ -1,0 +1,129 @@
+{
+  "off_distribution_threshold": 1.2903228971143919,
+  "student_success_near_robot": 0.691358024691358,
+  "student_success_far": 0.8721461187214612,
+  "teacher_success_near_robot": 0.9629629629629629,
+  "fraction_failures_near_robot": 0.4716981132075472,
+  "median_max_tilt": {
+    "student_success": 15.153678894042969,
+    "student_failure": 36.13935089111328,
+    "teacher_on_student_failure_seeds": 23.037376403808594
+  },
+  "fraction_failures_tilt_over_30deg": 0.5849056603773585,
+  "fraction_successes_tilt_over_30deg": 0.02834008097165992,
+  "fraction_failures_off_distribution": 0.7924528301886793,
+  "fraction_successes_off_distribution": 0.31983805668016196,
+  "median_off_dist_step_failures": 14.0,
+  "nn_dist_step0_mean": {
+    "student_success": 0.1291906368180174,
+    "student_failure": 0.14749954739987634
+  },
+  "nn_dist_step0_mannwhitney_p": 0.009361206829649752,
+  "last50_steps_median_by_category": {
+    "dropped": {
+      "box_speed_last50": 0.0,
+      "dist_change_last50": 0.0,
+      "arm_action_last50": 0.10790000110864639,
+      "final_dist": 0.3863
+    },
+    "grasp_no_lift": {
+      "box_speed_last50": 0.0,
+      "dist_change_last50": -0.0,
+      "arm_action_last50": 0.15549999475479126,
+      "final_dist": 0.2478
+    },
+    "near_miss": {
+      "box_speed_last50": 0.001500000013038516,
+      "dist_change_last50": 9.999999747378752e-05,
+      "arm_action_last50": 0.004699999932199717,
+      "final_dist": 0.057
+    },
+    "no_grasp": {
+      "box_speed_last50": 0.0,
+      "dist_change_last50": 0.0,
+      "arm_action_last50": 0.10769999772310257,
+      "final_dist": 0.4399
+    },
+    "success": {
+      "box_speed_last50": 0.0007999999797903001,
+      "dist_change_last50": -0.0,
+      "arm_action_last50": 0.004000000189989805,
+      "final_dist": 0.0193
+    },
+    "wrong_place": {
+      "box_speed_last50": 0.0917000025510788,
+      "dist_change_last50": 0.053700000047683716,
+      "arm_action_last50": 0.08730000257492065,
+      "final_dist": 0.291
+    }
+  },
+  "category_counts_baseline": {
+    "success": 247,
+    "near_miss": 20,
+    "no_grasp": 12,
+    "dropped": 10,
+    "wrong_place": 10,
+    "grasp_no_lift": 1
+  },
+  "takeover": {
+    "0": {
+      "success": 0.98,
+      "rescued_of_student_failures": "47/53"
+    },
+    "10": {
+      "success": 0.98,
+      "rescued_of_student_failures": "47/53"
+    },
+    "15": {
+      "success": 0.9166666666666666,
+      "rescued_of_student_failures": "29/53"
+    },
+    "20": {
+      "success": 0.9,
+      "rescued_of_student_failures": "23/53"
+    },
+    "30": {
+      "success": 0.8766666666666666,
+      "rescued_of_student_failures": "18/53"
+    },
+    "50": {
+      "success": 0.8733333333333334,
+      "rescued_of_student_failures": "16/53"
+    },
+    "100": {
+      "success": 0.8666666666666667,
+      "rescued_of_student_failures": "15/53"
+    },
+    "150": {
+      "success": 0.8233333333333334,
+      "rescued_of_student_failures": "0/53"
+    }
+  },
+  "teacher_mean_abs_arm_action_change": 0.028471454977989197,
+  "coverage_vs_n": {
+    "25": {
+      "success": 0.167,
+      "teacher_dist_step0_median": 0.203,
+      "teacher_dist_steps60_150_median": 0.317,
+      "student_dist_steps60_150_median": 2.338,
+      "student_episodes_off_distribution": 0.693,
+      "student_failures_off_distribution": 0.788
+    },
+    "50": {
+      "success": 0.56,
+      "teacher_dist_step0_median": 0.163,
+      "teacher_dist_steps60_150_median": 0.224,
+      "student_dist_steps60_150_median": 0.659,
+      "student_episodes_off_distribution": 0.477,
+      "student_failures_off_distribution": 0.699
+    },
+    "100": {
+      "success": 0.823,
+      "teacher_dist_step0_median": 0.132,
+      "teacher_dist_steps60_150_median": 0.189,
+      "student_dist_steps60_150_median": 0.423,
+      "student_episodes_off_distribution": 0.403,
+      "student_failures_off_distribution": 0.784
+    }
+  }
+}
